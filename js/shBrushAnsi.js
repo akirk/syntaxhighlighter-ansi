@@ -74,9 +74,9 @@
 			if (match.index > lastIndex) {
 				var beforeText = fullText.substring(lastIndex, match.index);
 				if (currentStyle) {
-					result += '<span style="' + currentStyle + '">' + beforeText + '</span>';
+					result += '<span style="' + currentStyle + '">' + escapeHtml(beforeText) + '</span>';
 				} else {
-					result += beforeText;
+					result += escapeHtml(beforeText);
 				}
 			}
 
@@ -96,9 +96,9 @@
 		if (lastIndex < fullText.length) {
 			var remainingText = fullText.substring(lastIndex);
 			if (currentStyle) {
-				result += '<span style="' + currentStyle + '">' + remainingText + '</span>';
+				result += '<span style="' + currentStyle + '">' + escapeHtml(remainingText) + '</span>';
 			} else {
-				result += remainingText;
+				result += escapeHtml(remainingText);
 			}
 		}
 
@@ -130,25 +130,25 @@
 			else if (code === '8') styles.push('visibility: hidden');
 			else if (code === '9') styles.push('text-decoration: line-through');
 
-			// Basic 8 colors (30-37, 90-97)
-			else if (code === '30') styles.push('color: #000000');
+			// Basic 8 colors (30-37, 90-97) - using light-dark() for grays
+			else if (code === '30') styles.push('color: light-dark(#000000, #ffffff)');
 			else if (code === '31') styles.push('color: #CC0000');
 			else if (code === '32') styles.push('color: #4E9A06');
 			else if (code === '33') styles.push('color: #C4A000');
 			else if (code === '34') styles.push('color: #3465A4');
 			else if (code === '35') styles.push('color: #75507B');
 			else if (code === '36') styles.push('color: #06989A');
-			else if (code === '37') styles.push('color: #D3D7CF');
+			else if (code === '37') styles.push('color: light-dark(#D3D7CF, #404040)');
 
-			// Bright colors (90-97)
-			else if (code === '90') styles.push('color: #555753');
+			// Bright colors (90-97) - using light-dark() for grays
+			else if (code === '90') styles.push('color: light-dark(#555753, #888888)');
 			else if (code === '91') styles.push('color: #EF2929');
 			else if (code === '92') styles.push('color: #8AE234');
 			else if (code === '93') styles.push('color: #FCE94F');
 			else if (code === '94') styles.push('color: #729FCF');
 			else if (code === '95') styles.push('color: #AD7FA8');
 			else if (code === '96') styles.push('color: #34E2E2');
-			else if (code === '97') styles.push('color: #EEEEEC');
+			else if (code === '97') styles.push('color: light-dark(#EEEEEC, #202020)');
 
 			// 256-color foreground: 38;5;n
 			else if (code === '38' && i + 2 < parts.length && parts[i + 1] === '5') {
@@ -168,12 +168,22 @@
 		return styles.join('; ');
 	}
 
+	function escapeHtml(text) {
+		var div = document.createElement('div');
+		div.textContent = text;
+		return div.innerHTML;
+	}
+
 	function ansi256ToHex(n) {
-		// Standard 16 colors (0-15)
+		// Standard 16 colors (0-15) - using light-dark() for grays
 		if (n < 16) {
 			var colors16 = [
-				'#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0',
-				'#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
+				'light-dark(#000000, #ffffff)',  // 0: black/white
+				'#800000', '#008000', '#808000', '#000080', '#800080', '#008080',
+				'light-dark(#c0c0c0, #404040)', // 7: light gray
+				'light-dark(#808080, #888888)', // 8: dark gray
+				'#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff',
+				'light-dark(#ffffff, #000000)'  // 15: white/black
 			];
 			return colors16[n];
 		}
