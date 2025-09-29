@@ -23,19 +23,8 @@
 		window.addEventListener('DOMContentLoaded', function() {
 			// Process only ANSI syntax highlighter containers
 			setTimeout(function() {
-				console.log('Looking for ANSI containers...');
-				var containers = document.querySelectorAll('.syntaxhighlighter');
-				console.log('Found syntaxhighlighter containers:', containers.length);
-
-				for (var i = 0; i < containers.length; i++) {
-					console.log('Container', i, 'classes:', containers[i].className);
-				}
-
 				var ansiContainers = document.querySelectorAll('.syntaxhighlighter.ansi, .syntaxhighlighter.ansicodes, .syntaxhighlighter.ansi-codes');
-				console.log('Found ANSI containers:', ansiContainers.length);
-
 				for (var i = 0; i < ansiContainers.length; i++) {
-					console.log('Processing ANSI container:', ansiContainers[i].className);
 					processAnsiInContainer(ansiContainers[i]);
 				}
 			}, 100);
@@ -73,19 +62,19 @@
 			return;
 		}
 
-		// Process ANSI codes in the full text
+		// Process ANSI codes in the full text (including 256-color codes)
 		var ansiRegex = /(\\e\[|\\x1b\[|\x1b\[)([0-9;]*)m/g;
 		var result = '';
 		var lastIndex = 0;
-		var currentClass = '';
+		var currentStyle = '';
 		var match;
 
 		while ((match = ansiRegex.exec(fullText)) !== null) {
 			// Add text before the ANSI code
 			if (match.index > lastIndex) {
 				var beforeText = fullText.substring(lastIndex, match.index);
-				if (currentClass) {
-					result += '<span class="' + currentClass + '">' + beforeText + '</span>';
+				if (currentStyle) {
+					result += '<span style="' + currentStyle + '">' + beforeText + '</span>';
 				} else {
 					result += beforeText;
 				}
@@ -93,11 +82,11 @@
 
 			var ansiCode = match[2];
 
-			// Handle reset or set new class
+			// Handle reset or set new style
 			if (ansiCode === '0' || ansiCode === '') {
-				currentClass = '';
+				currentStyle = '';
 			} else {
-				currentClass = getAnsiClass(ansiCode) || '';
+				currentStyle = getAnsiStyle(ansiCode) || '';
 			}
 
 			lastIndex = ansiRegex.lastIndex;
@@ -106,8 +95,8 @@
 		// Add remaining text
 		if (lastIndex < fullText.length) {
 			var remainingText = fullText.substring(lastIndex);
-			if (currentClass) {
-				result += '<span class="' + currentClass + '">' + remainingText + '</span>';
+			if (currentStyle) {
+				result += '<span style="' + currentStyle + '">' + remainingText + '</span>';
 			} else {
 				result += remainingText;
 			}
@@ -125,51 +114,84 @@
 	}
 
 
-	function getAnsiClass(code) {
-		var ansiMap = {
-			'1': 'ansi-bold',
-			'2': 'ansi-dim',
-			'3': 'ansi-italic',
-			'4': 'ansi-underline',
-			'5': 'ansi-blink',
-			'7': 'ansi-reverse',
-			'8': 'ansi-hidden',
-			'9': 'ansi-strikethrough',
-			'30': 'ansi-fg-black',
-			'31': 'ansi-fg-red',
-			'32': 'ansi-fg-green',
-			'33': 'ansi-fg-yellow',
-			'34': 'ansi-fg-blue',
-			'35': 'ansi-fg-magenta',
-			'36': 'ansi-fg-cyan',
-			'37': 'ansi-fg-white',
-			'90': 'ansi-fg-bright-black',
-			'91': 'ansi-fg-bright-red',
-			'92': 'ansi-fg-bright-green',
-			'93': 'ansi-fg-bright-yellow',
-			'94': 'ansi-fg-bright-blue',
-			'95': 'ansi-fg-bright-magenta',
-			'96': 'ansi-fg-bright-cyan',
-			'97': 'ansi-fg-bright-white',
-			'40': 'ansi-bg-black',
-			'41': 'ansi-bg-red',
-			'42': 'ansi-bg-green',
-			'43': 'ansi-bg-yellow',
-			'44': 'ansi-bg-blue',
-			'45': 'ansi-bg-magenta',
-			'46': 'ansi-bg-cyan',
-			'47': 'ansi-bg-white',
-			'100': 'ansi-bg-bright-black',
-			'101': 'ansi-bg-bright-red',
-			'102': 'ansi-bg-bright-green',
-			'103': 'ansi-bg-bright-yellow',
-			'104': 'ansi-bg-bright-blue',
-			'105': 'ansi-bg-bright-magenta',
-			'106': 'ansi-bg-bright-cyan',
-			'107': 'ansi-bg-bright-white'
-		};
+	function getAnsiStyle(codes) {
+		var parts = codes.split(';');
+		var styles = [];
 
-		return ansiMap[code] || null;
+		for (var i = 0; i < parts.length; i++) {
+			var code = parts[i];
+
+			// Text formatting
+			if (code === '1') styles.push('font-weight: bold');
+			else if (code === '2') styles.push('opacity: 0.5');
+			else if (code === '3') styles.push('font-style: italic');
+			else if (code === '4') styles.push('text-decoration: underline');
+			else if (code === '7') styles.push('filter: invert(1)');
+			else if (code === '8') styles.push('visibility: hidden');
+			else if (code === '9') styles.push('text-decoration: line-through');
+
+			// Basic 8 colors (30-37, 90-97)
+			else if (code === '30') styles.push('color: #000000');
+			else if (code === '31') styles.push('color: #CC0000');
+			else if (code === '32') styles.push('color: #4E9A06');
+			else if (code === '33') styles.push('color: #C4A000');
+			else if (code === '34') styles.push('color: #3465A4');
+			else if (code === '35') styles.push('color: #75507B');
+			else if (code === '36') styles.push('color: #06989A');
+			else if (code === '37') styles.push('color: #D3D7CF');
+
+			// Bright colors (90-97)
+			else if (code === '90') styles.push('color: #555753');
+			else if (code === '91') styles.push('color: #EF2929');
+			else if (code === '92') styles.push('color: #8AE234');
+			else if (code === '93') styles.push('color: #FCE94F');
+			else if (code === '94') styles.push('color: #729FCF');
+			else if (code === '95') styles.push('color: #AD7FA8');
+			else if (code === '96') styles.push('color: #34E2E2');
+			else if (code === '97') styles.push('color: #EEEEEC');
+
+			// 256-color foreground: 38;5;n
+			else if (code === '38' && i + 2 < parts.length && parts[i + 1] === '5') {
+				var colorNum = parseInt(parts[i + 2]);
+				styles.push('color: ' + ansi256ToHex(colorNum));
+				i += 2; // Skip the next two parts
+			}
+
+			// 256-color background: 48;5;n
+			else if (code === '48' && i + 2 < parts.length && parts[i + 1] === '5') {
+				var colorNum = parseInt(parts[i + 2]);
+				styles.push('background-color: ' + ansi256ToHex(colorNum));
+				i += 2; // Skip the next two parts
+			}
+		}
+
+		return styles.join('; ');
+	}
+
+	function ansi256ToHex(n) {
+		// Standard 16 colors (0-15)
+		if (n < 16) {
+			var colors16 = [
+				'#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0',
+				'#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
+			];
+			return colors16[n];
+		}
+
+		// 216 color cube (16-231)
+		if (n < 232) {
+			n -= 16;
+			var r = Math.floor(n / 36);
+			var g = Math.floor((n % 36) / 6);
+			var b = n % 6;
+
+			var values = [0, 95, 135, 175, 215, 255];
+			return 'rgb(' + values[r] + ',' + values[g] + ',' + values[b] + ')';
+		}
+
+		// Grayscale (232-255)
+		var gray = 8 + (n - 232) * 10;
+		return 'rgb(' + gray + ',' + gray + ',' + gray + ')';
 	}
 
 	// CommonJS
