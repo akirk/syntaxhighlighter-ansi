@@ -127,6 +127,9 @@ class SyntaxHighlighter_ANSI {
         .syntaxhighlighter .ansi-hidden { visibility: hidden !important; }
         .syntaxhighlighter .ansi-strikethrough { text-decoration: line-through !important; }
 
+        /* Hide ANSI escape codes temporarily until JavaScript processes them */
+        .syntaxhighlighter .ansi-hide { display: none !important; }
+
         /* ANSI reset removes all styling */
         .syntaxhighlighter .ansi-reset { color: inherit !important; background: inherit !important; font-weight: normal !important; font-style: normal !important; text-decoration: none !important; }
 
