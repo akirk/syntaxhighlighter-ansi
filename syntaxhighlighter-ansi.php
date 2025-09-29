@@ -48,6 +48,10 @@ class SyntaxHighlighter_ANSI {
         // Add ANSI CSS styles
         add_action( 'wp_head', array( $this, 'add_ansi_styles' ) );
         add_action( 'admin_head', array( $this, 'add_ansi_styles' ) );
+
+        // Strip ANSI codes from RSS feeds
+        add_filter( 'the_content_feed', array( $this, 'strip_ansi_codes_from_rss' ) );
+        add_filter( 'the_excerpt_rss', array( $this, 'strip_ansi_codes_from_rss' ) );
     }
 
     public function add_ansi_brush( $brushes ) {
@@ -139,6 +143,16 @@ class SyntaxHighlighter_ANSI {
         }
         </style>
         <?php
+    }
+
+    public function strip_ansi_codes_from_rss( $content ) {
+        // Remove ANSI escape sequences from RSS content
+        // Matches both \e[ and \x1b[ formats with any parameters
+        $content = preg_replace( '/\\\\e\[[0-9;]*m/', '', $content );
+        $content = preg_replace( '/\\\\x1b\[[0-9;]*m/', '', $content );
+        $content = preg_replace( '/\x1b\[[0-9;]*m/', '', $content );
+
+        return $content;
     }
 
     public function admin_notice_missing_syntaxhighlighter() {
