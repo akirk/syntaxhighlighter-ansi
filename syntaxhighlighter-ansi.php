@@ -76,7 +76,6 @@ class SyntaxHighlighter_ANSI {
         ?>
         <style type="text/css">
         /* ANSI Color Styles for SyntaxHighlighter */
-        .syntaxhighlighter .ansi-reset { color: inherit !important; background: inherit !important; font-weight: normal !important; font-style: normal !important; text-decoration: none !important; }
 
         /* Foreground colors */
         .syntaxhighlighter .ansi-fg-black { color: #000000 !important; }
@@ -128,8 +127,8 @@ class SyntaxHighlighter_ANSI {
         .syntaxhighlighter .ansi-hidden { visibility: hidden !important; }
         .syntaxhighlighter .ansi-strikethrough { text-decoration: line-through !important; }
 
-        /* Hide ANSI codes while preserving their styling effects */
-        .syntaxhighlighter .ansi-code { display: none !important; }
+        /* ANSI reset removes all styling */
+        .syntaxhighlighter .ansi-reset { color: inherit !important; background: inherit !important; font-weight: normal !important; font-style: normal !important; text-decoration: none !important; }
 
         @keyframes blink {
             0%, 50% { opacity: 1; }
