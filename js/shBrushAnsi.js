@@ -34,93 +34,87 @@
 	}
 
 	function processAnsiInContainer(container) {
-		// Find all text nodes and process ANSI codes
-		var walker = document.createTreeWalker(
-			container,
-			NodeFilter.SHOW_TEXT,
-			null,
-			false
-		);
-
-		var textNodes = [];
-		var node;
-		while (node = walker.nextNode()) {
-			if (node.nodeValue && (node.nodeValue.indexOf('\\e[') !== -1 || node.nodeValue.indexOf('\x1b[') !== -1)) {
-				textNodes.push(node);
-			}
-		}
-
-		// Process each text node
-		for (var i = 0; i < textNodes.length; i++) {
-			processTextNode(textNodes[i]);
+		// Process each line div separately
+		var lines = container.querySelectorAll('.line');
+		for (var i = 0; i < lines.length; i++) {
+			processLineDiv(lines[i]);
 		}
 	}
 
-	function processTextNode(textNode) {
-		var text = textNode.nodeValue;
+	function processLineDiv(lineDiv) {
+		// Get all code elements in this line and concatenate their text
+		var codeElements = lineDiv.querySelectorAll('code');
+		var fullText = '';
+		var textMap = [];
+
+		for (var i = 0; i < codeElements.length; i++) {
+			var elem = codeElements[i];
+			var text = elem.textContent || elem.innerText || '';
+			textMap.push({
+				element: elem,
+				startIndex: fullText.length,
+				endIndex: fullText.length + text.length,
+				text: text
+			});
+			fullText += text;
+		}
+
+		// Check if line contains ANSI codes
+		if (fullText.indexOf('\\e[') === -1 && fullText.indexOf('\x1b[') === -1) {
+			return;
+		}
+
+		// Process ANSI codes in the full text
 		var ansiRegex = /(\\e\[|\\x1b\[|\x1b\[)([0-9;]*)m/g;
-		var parent = textNode.parentNode;
-		var fragment = document.createDocumentFragment();
+		var result = '';
 		var lastIndex = 0;
-		var currentSpan = null;
+		var currentClass = '';
 		var match;
 
-		while ((match = ansiRegex.exec(text)) !== null) {
+		while ((match = ansiRegex.exec(fullText)) !== null) {
 			// Add text before the ANSI code
 			if (match.index > lastIndex) {
-				var beforeText = text.substring(lastIndex, match.index);
-				if (currentSpan) {
-					currentSpan.appendChild(document.createTextNode(beforeText));
+				var beforeText = fullText.substring(lastIndex, match.index);
+				if (currentClass) {
+					result += '<span class="' + currentClass + '">' + beforeText + '</span>';
 				} else {
-					fragment.appendChild(document.createTextNode(beforeText));
+					result += beforeText;
 				}
 			}
 
 			var ansiCode = match[2];
 
-			// Handle reset or close existing span
+			// Handle reset or set new class
 			if (ansiCode === '0' || ansiCode === '') {
-				if (currentSpan) {
-					fragment.appendChild(currentSpan);
-					currentSpan = null;
-				}
+				currentClass = '';
 			} else {
-				// Close existing span if open
-				if (currentSpan) {
-					fragment.appendChild(currentSpan);
-				}
-
-				// Create new span with appropriate class
-				var cssClass = getAnsiClass(ansiCode);
-				if (cssClass) {
-					currentSpan = document.createElement('span');
-					currentSpan.className = cssClass;
-				} else {
-					currentSpan = null;
-				}
+				currentClass = getAnsiClass(ansiCode) || '';
 			}
 
 			lastIndex = ansiRegex.lastIndex;
 		}
 
 		// Add remaining text
-		if (lastIndex < text.length) {
-			var remainingText = text.substring(lastIndex);
-			if (currentSpan) {
-				currentSpan.appendChild(document.createTextNode(remainingText));
+		if (lastIndex < fullText.length) {
+			var remainingText = fullText.substring(lastIndex);
+			if (currentClass) {
+				result += '<span class="' + currentClass + '">' + remainingText + '</span>';
 			} else {
-				fragment.appendChild(document.createTextNode(remainingText));
+				result += remainingText;
 			}
 		}
 
-		// Close any remaining open span
-		if (currentSpan) {
-			fragment.appendChild(currentSpan);
+		// Replace the line content if it changed
+		if (result !== fullText) {
+			// Clear existing code elements and replace with processed HTML
+			lineDiv.innerHTML = lineDiv.innerHTML.replace(/<code[^>]*>.*?<\/code>/g, '');
+			var codeWrapper = document.createElement('code');
+			codeWrapper.className = 'ansi plain';
+			codeWrapper.innerHTML = result;
+			lineDiv.appendChild(codeWrapper);
 		}
-
-		// Replace the text node with the fragment
-		parent.replaceChild(fragment, textNode);
 	}
+
 
 	function getAnsiClass(code) {
 		var ansiMap = {
