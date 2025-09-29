@@ -128,8 +128,8 @@ class SyntaxHighlighter_ANSI {
         .syntaxhighlighter .ansi-hidden { visibility: hidden !important; }
         .syntaxhighlighter .ansi-strikethrough { text-decoration: line-through !important; }
 
-        /* General ANSI code styling */
-        .syntaxhighlighter .ansi-code { color: #666666 !important; font-size: 0.8em; }
+        /* Hide ANSI codes while preserving their styling effects */
+        .syntaxhighlighter .ansi-code { display: none !important; }
 
         @keyframes blink {
             0%, 50% { opacity: 1; }
