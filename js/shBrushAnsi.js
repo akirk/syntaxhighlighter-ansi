@@ -9,10 +9,8 @@
 
 	function Brush()
 	{
-		this.regexList = [
-			// Mark all ANSI escape sequences for hiding
-			{ regex: /(\\e\[|\\x1b\[|\x1b\[)([0-9;]*)m/g, css: 'ansi-hide' }
-		];
+		// Empty regex list - let JavaScript handle all ANSI processing
+		this.regexList = [];
 	}
 
 	Brush.prototype = new SyntaxHighlighter.Highlighter();
@@ -23,9 +21,9 @@
 	// Post-process ANSI codes after SyntaxHighlighter is done
 	if (typeof window !== 'undefined') {
 		window.addEventListener('DOMContentLoaded', function() {
-			// Process all syntax highlighter containers
+			// Process only ANSI syntax highlighter containers
 			setTimeout(function() {
-				var containers = document.querySelectorAll('.syntaxhighlighter');
+				var containers = document.querySelectorAll('.syntaxhighlighter.ansi, .syntaxhighlighter.ansicodes, .syntaxhighlighter.ansi-codes');
 				for (var i = 0; i < containers.length; i++) {
 					processAnsiInContainer(containers[i]);
 				}
