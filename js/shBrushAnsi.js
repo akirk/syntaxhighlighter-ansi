@@ -23,9 +23,20 @@
 		window.addEventListener('DOMContentLoaded', function() {
 			// Process only ANSI syntax highlighter containers
 			setTimeout(function() {
-				var containers = document.querySelectorAll('.syntaxhighlighter.ansi, .syntaxhighlighter.ansicodes, .syntaxhighlighter.ansi-codes');
+				console.log('Looking for ANSI containers...');
+				var containers = document.querySelectorAll('.syntaxhighlighter');
+				console.log('Found syntaxhighlighter containers:', containers.length);
+
 				for (var i = 0; i < containers.length; i++) {
-					processAnsiInContainer(containers[i]);
+					console.log('Container', i, 'classes:', containers[i].className);
+				}
+
+				var ansiContainers = document.querySelectorAll('.syntaxhighlighter.ansi, .syntaxhighlighter.ansicodes, .syntaxhighlighter.ansi-codes');
+				console.log('Found ANSI containers:', ansiContainers.length);
+
+				for (var i = 0; i < ansiContainers.length; i++) {
+					console.log('Processing ANSI container:', ansiContainers[i].className);
+					processAnsiInContainer(ansiContainers[i]);
 				}
 			}, 100);
 		});
